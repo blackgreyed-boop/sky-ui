@@ -1323,6 +1323,7 @@ public:
         else if (key == "FE_HLPB") replacement = "SK_ZOOM";
         else if (key == "FE_HLPO") replacement = "SK_LEG";
         else if (key == "FE_HLPT") replacement = "SK_MARK";
+        else if (key == "SK_MODL") return "F1 MODLOADER";
 #endif
         return textLoader.Get(replacement ? replacement : key.c_str());
     }
@@ -1337,6 +1338,14 @@ public:
         ClearHelpText();
 
 #ifdef GTASA
+        // Game page: F1 opens ModLoader.
+        if (modLoader &&
+            _this->m_nCurrentMenuPage == MENUPAGE_NEW_GAME &&
+            CPad::NewKeyState.FKeys[0] && !CPad::OldKeyState.FKeys[0]) {
+            _this->SwitchToNewScreen(MENUPAGE_MODLOADER);
+            return;
+        }
+
         if (_this->m_nCurrentMenuPage == MENUPAGE_GALLERY &&
             ((CPad::NewKeyState.FKeys[4] && !CPad::OldKeyState.FKeys[4]) ||
              (HasPadInHands() && CPad::GetPad(0)->NewState.ButtonSquare && !CPad::GetPad(0)->OldState.ButtonSquare))) {
@@ -1492,6 +1501,9 @@ public:
         // Right
         SetHelpText(4, "FE_HLPG");
 
+        // Game page: show the F1 ModLoader shortcut in the help legend.
+        if (modLoader && _this->m_nCurrentMenuPage == MENUPAGE_NEW_GAME)
+            SetHelpText(2, "SK_MODL");
         switch (_this->m_nCurrentMenuPage) {
         case MENUPAGE_MAP:
             if (currentInput == INPUT_STANDARD) {
@@ -3269,6 +3281,11 @@ public:
         DrawHeader(_this);
 #endif
 
+#ifdef GTASA
+        // Full-screen SA map: keep map help/header, hide normal bottom tabs.
+        if (_this->m_nCurrentMenuPage == MENUPAGE_MAP && currentInput == INPUT_STANDARD)
+            return;
+#endif
         if (saveMenuActive)
             return;
 
@@ -3689,8 +3706,14 @@ public:
         strcpy(aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_EntryName, "FEO_LAN");
         aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nAction = MENUACTION_CHANGEMENU;
         aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nTargetMenu = MENUPAGE_LANGUAGE_SETTINGS;
-        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nY -= 8;
+        // Language: normal left-hand Display list.
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nX = 0;
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nY = 0;
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nAlign = 1;
 
+        // Advanced: centered underneath the normal list.
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[7].m_nX = 320;
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[7].m_nAlign = 0;
         strcpy(aScreens[MENUPAGE_CHOOSE_LOAD_SLOT].m_aEntries[9].m_EntryName, "FESZ_CA");
         aScreens[MENUPAGE_CHOOSE_LOAD_SLOT].m_aEntries[9].m_nAlign = 0;
         aScreens[MENUPAGE_CHOOSE_LOAD_SLOT].m_aEntries[9].m_nX = 0;
@@ -3807,15 +3830,10 @@ public:
 #endif
 
 #ifdef GTASA
-        if (modLoader && textLoader.Get("ML_F0HH")[0] != '\0') {
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nAction = MENUACTION_CHANGEMENU;
-            strcpy(aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_EntryName, "ML_F0HH");
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nSaveSlot = 0;
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nTargetMenu = MENUPAGE_MODLOADER;
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nX = 0;
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nY = 0;
-            aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nAlign = 1;
-        }
+        // ModLoader is accessed through F1 instead of a visible Game-menu row.
+        aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_EntryName[0] = '\0';
+        aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nAction = MENUACTION_NOTHING;
+        aScreens[MENUPAGE_NEW_GAME].m_aEntries[4].m_nTargetMenu = MENUPAGE_NONE;
 #endif
 
         menuConfigured = true;
@@ -4067,7 +4085,7 @@ public:
         CFont::SetOrientation(ALIGN_LEFT);
         CFont::SetScale(ScaleX(0.3f), ScaleY(0.7f));
         CFont::SetColor(CRGBA(225, 225, 225, 255));
-        PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(112.0f), std::string(ShowControllerPrompts() ? "Square/X: save camera photos " : "F5: save camera photos ") + (_this->m_bPrefsSavePhotos ? "On" : "Off"));
+        PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(100.0f), std::string(ShowControllerPrompts() ? "Square/X: save camera photos " : "F5: save camera photos ") + (_this->m_bPrefsSavePhotos ? "On" : "Off"));
         if (!galleryStatus.empty()) PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(132.0f), galleryStatus);
 
         if (currentInput == INPUT_TAB) {

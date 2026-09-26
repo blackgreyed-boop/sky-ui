@@ -1,4 +1,5 @@
-workspace "sky-ui"
+﻿workspace "sky-ui"
+        toolset "v145"
 	configurations { "ReleaseSA", "DebugSA", "ReleaseVC", "DebugVC", "ReleaseIII", "DebugIII" }
 	location "project_files"
    
@@ -58,7 +59,8 @@ project "sky-ui"
 		includedirs {
 			"$(PLUGIN_SDK_DIR)/plugin_sa/",
 			"$(PLUGIN_SDK_DIR)/plugin_sa/game_sa/",
-            "$(PLUGIN_SDK_DIR)/plugin_sa/game_sa/rw"
+            "$(PLUGIN_SDK_DIR)/plugin_sa/game_sa/rw",
+                        "$(PLUGIN_SDK_DIR)/plugin_sa/game_sa/enums"
 		}
 		targetname "SkyUI"
 		debugdir "$(GTA_SA_DIR)"
@@ -98,3 +100,5 @@ project "sky-ui"
 		links { "plugin_iii_d" }
 			
 	filter { }
+
+
