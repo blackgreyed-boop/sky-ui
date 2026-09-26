@@ -1822,7 +1822,14 @@ public:
                 _this->m_bFrontEnd_ReloadObrTxtGxt = true;
                 _this->InitialiseChangedLanguageSettings();
 #elif GTASA
+                // Match GTA SA's native language-change state transition.
+                _this->m_nPrefsPrevLanguage = 0x9D;
+                _this->m_bReinitLanguageSettings = true;
                 _this->InitialiseChangedLanguageSettings(false);
+
+                // Keep SkyUI's private strings synchronized with GTA.
+                UpdateText(_this);
+                previousLanguage = _this->m_nPrefsLanguage;
 #else
                 _this->m_bFrontEnd_ReloadObrTxtGxt = true;
 #endif
@@ -2064,7 +2071,8 @@ public:
             CFont::SetDropColor(CRGBA(0, 0, 0, GetAlpha()));
             CFont::SetColor(CRGBA(HUD_COLOUR_BLUEWHITE, GetAlpha()));
             CFont::SetFontStyle(FONT_GOTHIC);
-            CFont::SetScale(ScaleX(1.7f), ScaleY(3.3f));
+            // Keep Gothic header proportions stable on ultrawide displays.
+            CFont::SetScale(ScaleY(1.0f), ScaleY(2.2f));
             CFont::PrintString(ScaleX(40.0f), ScaleY(30.0f), textLoader.Get(aScreens[_this->m_nCurrentMenuPage].m_ScreenName));
         }
 #endif
@@ -2171,7 +2179,15 @@ public:
             y = starty + ScaleY(spacing * helpRows[i]);
 #endif
             if (!it.empty()) {
+                #ifdef GTASA
+                // Original SkyUI 1.3 SA controller-helper path:
+                // use the native FE_HLP* GXT string directly in controller mode.
+                auto str = ShowControllerPrompts()
+                    ? TheText.Get(it.c_str())
+                    : GetHelpPrompt(it);
+                #else
                 auto str = GetHelpPrompt(it);
+                #endif
                 #ifdef GTAVC
                 CFont::SetScale(ScaleX(0.40f * skyMenuOptions.helpScale), ScaleY(0.78f * skyMenuOptions.helpScale));
                 const float columnWidth = ScaleX(orientRight ? 96.0f : 62.0f);
@@ -2192,6 +2208,36 @@ public:
 
                 CFont::PrintString(x - offset, y, str);
             }
+
+#ifdef GTASA
+            // Display-page SkyUI shortcut: third row of the right help column.
+            if (i == 5 && _this->m_nCurrentMenuPage == MENUPAGE_DISPLAY_SETTINGS) {
+                const char* skyUiHelp = ShowControllerPrompts() ?
+                    "Back/Select: SkyUI options" :
+                    "F7 / click here: SkyUI options";
+
+                // Inherit FONT_MENU, grey colour, shadow and other state from
+                // the GTA SA help renderer above.
+                CFont::SetScaleForCurrentlanguage(
+                    ScaleX(0.32f * skyMenuOptions.helpScale),
+                    ScaleY(0.65f * skyMenuOptions.helpScale));
+
+                const float columnWidth = ScaleX(110.0f);
+                const float naturalWidth = CFont::GetStringWidth(skyUiHelp, true);
+
+                if (naturalWidth > columnWidth) {
+                    CFont::SetScaleForCurrentlanguage(
+                        ScaleX(0.32f * skyMenuOptions.helpScale) * columnWidth / naturalWidth,
+                        ScaleY(0.65f * skyMenuOptions.helpScale));
+                }
+
+                const float helpX = SCREEN_WIDTH - ScaleX(32.0f);
+                const float helpY = starty + ScaleY(spacing * 2.0f);
+                const float helpWidth = CFont::GetStringWidth(skyUiHelp, true);
+
+                CFont::PrintString(helpX - helpWidth, helpY, skyUiHelp);
+            }
+#endif
 
             y += ScaleY(spacing);
 
@@ -3256,14 +3302,6 @@ public:
         if (controllerPage && !wasControllerPage) frontendSprites.RetryMissing();
         wasControllerPage = controllerPage;
         if (controllerPage) DrawControllerScreen(_this);
-        if (_this->m_nCurrentMenuPage == MENUPAGE_DISPLAY_SETTINGS) {
-            CFont::SetOrientation(ALIGN_LEFT);
-            CFont::SetFontStyle(FONT_SUBTITLES);
-            CFont::SetScale(ScaleX(0.30f), ScaleY(0.62f));
-            CFont::SetColor(CRGBA(225, 225, 225, GetAlpha()));
-            PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(364.0f), ShowControllerPrompts() ?
-                "Back/Select: SkyUI options" : "F7 / click here: SkyUI options");
-        }
 
 #if defined(GTA3) && defined(LC01)
         if (_this->m_nCurrentMenuPage == MENUPAGE_STATS)
@@ -3704,8 +3742,8 @@ public:
         aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[7].m_nY += 20;
 
         strcpy(aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_EntryName, "FEO_LAN");
-        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nAction = MENUACTION_CHANGEMENU;
-        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nTargetMenu = MENUPAGE_LANGUAGE_SETTINGS;
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nAction = MENUACTION_CHANGELANG;
+        aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nTargetMenu = MENUPAGE_NONE;
         // Language: normal left-hand Display list.
         aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nX = 0;
         aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[6].m_nY = 0;
@@ -3940,10 +3978,15 @@ public:
 
     static inline void Clear(CMenuManager* _this, bool run = false) {
         controllerSettings.active = menuSettings.active = false; settingsNavigation.Reset();
+#ifdef GTASA
+        // SA frontend starts directly in active standard-input mode.
+        currentInput = INPUT_STANDARD;
+#else
         if (saveMenuActive)
             currentInput = INPUT_STANDARD;
         else
             currentInput = INPUT_TAB;
+#endif
 
 #if defined(GTAVC) || defined(GTASA) || (defined(GTA3) && defined(LC01))
         if (!_this->m_bGameNotLoaded && !saveMenuActive)
@@ -3967,7 +4010,7 @@ public:
             SwitchMenuPage(_this, GetTargetPage(), true);
 
 #ifdef GTASA
-        _this->m_bStandardInput = false;
+        _this->m_bStandardInput = true;
         scanGalleryPhotos = true;
 #endif
 
@@ -4811,11 +4854,13 @@ public:
                 center = 240.0f;
 
             CFont::PrintString(ScaleXKeepCentered(64.0f + center + GetMenuOffsetX()), y, str);
+
 #endif
             if (previousOrientation != -1)
                 CFont::SetOrientation((eFontAlignment)previousOrientation);
         };
         plugin::patch::RedirectCall(0x47C666, LAMBDA(void, __cdecl, drawLeftString, float, float, wchar_t*));
+
 
         auto drawRightString = [](float, float y, wchar_t* str) {
             CFont::SetOrientation(ALIGN_RIGHT);
@@ -5119,6 +5164,7 @@ public:
         };
 
         onProcess.after += [](CMenuManager* _this) {
+
             if (_this->m_bMenuActive || _this->m_bSaveMenuActive) {
                 if (!menuActive) {
                     Clear(_this, true);
@@ -5146,6 +5192,14 @@ public:
         InstallPreservingHook(0x57990D, {0x49, 0x83, 0xE1, 0x0A, 0x83, 0xC1, 0x14}, [](plugin::patch::RegPack& regs) {
             int32_t i = *(int32_t*)(regs.esp + 0x130 + -0x10C);
             (*(const plugin::char_t**)(&regs.esi)) = ProcessMenuOptionsStrings((CMenuManager*)regs.ebp, i);
+        });
+        InstallPreservingHook(0x57A202, {0x85, 0xF6}, [](plugin::patch::RegPack& regs) {
+            auto* menu = reinterpret_cast<CMenuManager*>(regs.ebp);
+            if (menu->m_nCurrentMenuPage == MENUPAGE_DISPLAY_SETTINGS) {
+                const int32_t i = *reinterpret_cast<int32_t*>(regs.esp + 0x24);
+                if (aScreens[MENUPAGE_DISPLAY_SETTINGS].m_aEntries[i].m_nAction == MENUACTION_CHANGELANG)
+                    regs.esi = reinterpret_cast<uintptr_t>(ProcessMenuOptionsStrings(menu, i));
+            }
         });
 #endif
 
@@ -5608,3 +5662,5 @@ extern "C" void sky_AddEntryToMenuScreen(uint32_t s, uint32_t e, uint32_t a, con
 extern "C" void sky_SaveOrLoadSettingsCB(void (*cb)(bool)) { return SkyUI::SaveOrLoadSettingsCB(cb); }
 extern "C" void sky_SaveSettings() { return SkyUI::SaveSettings(); }
 #endif
+
+
