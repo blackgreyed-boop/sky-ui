@@ -293,6 +293,11 @@ public:
 
     static inline bool modLoader = false;
 
+#ifdef GTASA
+    // Tracks ModLoader sessions opened from GAME through SkyUI F1.
+    static inline bool modLoaderReturnPending = false;
+#endif
+
     static inline bool ShowControllerPrompts() {
         return skyMenuOptions.ControllerPrompts(HasPadInHands());
     }
@@ -320,6 +325,41 @@ public:
     static inline SkyPrivateSprites frontendSprites = {};
 #ifdef GTASA
     static inline SkyPrivateSprites hudSprites = {};
+
+    enum ePcButtonSprite {
+        PCBTN_ENTER,
+        PCBTN_MOUSE_LEFT,
+        PCBTN_ESCAPE,
+        PCBTN_F1,
+        PCBTN_DELETE,
+        PCBTN_MOUSE_WHEEL,
+        PCBTN_L,
+        PCBTN_MOUSE_RIGHT,
+        PCBTN_LEFT,
+        PCBTN_RIGHT,
+        PCBTN_UP,
+        PCBTN_DOWN,
+        NUM_PC_BTNS
+    };
+
+    static inline std::array<CSprite2d, NUM_PC_BTNS> pcbtnsSprites = {};
+    static inline const char* pcbtnsSpritesNames[NUM_PC_BTNS] = {
+        "padenter",
+        "1",
+        "27",
+        "112",
+        "46",
+        "MWH",
+        "L",
+        "2",
+        "left",
+        "right",
+        "up",
+        "down"
+    };
+
+    static inline bool pcbtnsAvailable = false;
+    static inline int32_t pcbtnsTxdSlot = -1;
 #endif
 
     struct tMenuTab {
@@ -925,14 +965,9 @@ public:
         }
 #elif GTASA
         if (!_this->m_bGameNotLoaded) {
-            if (currentTab >= TAB_SAV && currentTab <= TAB_STA) {
-                firstTab = TAB_SAV;
-                lastTab = TAB_STA;
-            }
-            else if (currentTab >= TAB_CON && currentTab <= TAB_DIS) {
-                firstTab = TAB_CON;
-                lastTab = TAB_DIS;
-            }
+            // Loaded-game pause menu: navigate across all eight SA tabs.
+            firstTab = TAB_SAV;
+            lastTab = TAB_DIS;
         }
 #endif
 
@@ -1342,6 +1377,7 @@ public:
         if (modLoader &&
             _this->m_nCurrentMenuPage == MENUPAGE_NEW_GAME &&
             CPad::NewKeyState.FKeys[0] && !CPad::OldKeyState.FKeys[0]) {
+            modLoaderReturnPending = true;
             _this->SwitchToNewScreen(MENUPAGE_MODLOADER);
             return;
         }
@@ -2078,6 +2114,166 @@ public:
 #endif
     }
 
+#ifdef GTASA
+    static inline bool DrawPcHelpPrompt(
+        const std::string& key,
+        float anchorX,
+        float y,
+        bool orientRight
+    ) {
+        if (!pcbtnsAvailable || ShowControllerPrompts())
+            return false;
+
+        const int32_t* sprites = nullptr;
+        int32_t spriteCount = 0;
+        const char* label = nullptr;
+
+        static const int32_t selectSprites[] = {
+            PCBTN_ENTER, PCBTN_MOUSE_LEFT
+        };
+
+        static const int32_t backSprites[] = {
+            PCBTN_ESCAPE
+        };
+
+        static const int32_t modLoaderSprites[] = {
+            PCBTN_F1
+        };
+
+        static const int32_t deleteSprites[] = {
+            PCBTN_ENTER, PCBTN_DELETE
+        };
+
+        static const int32_t horizontalSprites[] = {
+            PCBTN_LEFT, PCBTN_RIGHT
+        };
+
+        static const int32_t moveSprites[] = {
+            PCBTN_UP, PCBTN_DOWN, PCBTN_LEFT, PCBTN_RIGHT
+        };
+
+        static const int32_t zoomSprites[] = {
+            PCBTN_MOUSE_WHEEL
+        };
+
+        static const int32_t legendSprites[] = {
+            PCBTN_L
+        };
+
+        static const int32_t markerSprites[] = {
+            PCBTN_MOUSE_RIGHT
+        };
+
+        if (key == "FE_HLPH" || key == "FEDS_SE") {
+            sprites = selectSprites;
+            spriteCount = 2;
+            label = "SELECT";
+        }
+        else if (
+            key == "FE_HLPE" ||
+            key == "FE_HLPW" ||
+            key == "FEDSBAC" ||
+            key == "FEDS_BA" ||
+            key == "FE_HLPC" ||
+            key == "FE_HLPS" ||
+            key == "FEDS_ST"
+        ) {
+            sprites = backSprites;
+            spriteCount = 1;
+            label = "BACK";
+        }
+        else if (key == "SK_MODL") {
+            sprites = modLoaderSprites;
+            spriteCount = 1;
+            label = "MODLOADER";
+        }
+        else if (
+            key == "FE_HLPG" ||
+            key == "FE_HLPI" ||
+            key == "FEDS_AM"
+        ) {
+            sprites = horizontalSprites;
+            spriteCount = 2;
+            label = "NAVIGATE";
+        }
+        else if (key == "FE_HLPA") {
+            sprites = moveSprites;
+            spriteCount = 4;
+            label = "MOVE";
+        }
+        else if (key == "FE_HLPB") {
+            sprites = zoomSprites;
+            spriteCount = 1;
+            label = "ZOOM";
+        }
+        else if (key == "FE_HLPO") {
+            sprites = legendSprites;
+            spriteCount = 1;
+            label = "LEGEND";
+        }
+        else if (key == "FE_HLPT") {
+            sprites = markerSprites;
+            spriteCount = 1;
+            label = "MARKER";
+        }
+        else if (key == "FE_HLPF") {
+            sprites = horizontalSprites;
+            spriteCount = 2;
+            label = "PHOTO";
+        }
+        else if (key == "FE_HLPM") {
+            sprites = deleteSprites;
+            spriteCount = 2;
+            label = "DELETE";
+        }
+        else {
+            return false;
+        }
+
+        const float iconSize = ScaleY(13.0f);
+        const float iconGap  = ScaleX(2.0f);
+        const float textGap  = ScaleX(4.0f);
+
+        CFont::SetScaleForCurrentlanguage(
+            ScaleX(0.32f * skyMenuOptions.helpScale),
+            ScaleY(0.65f * skyMenuOptions.helpScale));
+
+        const float labelWidth = CFont::GetStringWidth(label, true);
+
+        const float iconsWidth =
+            (iconSize * spriteCount) +
+            (iconGap * (spriteCount > 0 ? spriteCount - 1 : 0));
+
+        const float totalWidth =
+            iconsWidth + textGap + labelWidth;
+
+        float drawX = orientRight
+            ? anchorX - totalWidth
+            : anchorX;
+
+        const float iconY = y - ScaleY(1.0f);
+
+        for (int32_t n = 0; n < spriteCount; ++n) {
+            pcbtnsSprites[sprites[n]].Draw(
+                drawX,
+                iconY,
+                iconSize,
+                iconSize,
+                CRGBA(255, 255, 255, GetAlpha(255)));
+
+            drawX += iconSize;
+
+            if (n + 1 < spriteCount)
+                drawX += iconGap;
+        }
+
+        drawX += textGap;
+        CFont::PrintString(drawX, y, label);
+
+        return true;
+    }
+#endif
+
     static inline void DrawHelpText(CMenuManager* _this) {
         CFont::SetAlphaFade(255.0f);
 #ifdef GTASA
@@ -2180,8 +2376,12 @@ public:
 #endif
             if (!it.empty()) {
                 #ifdef GTASA
-                // Original SkyUI 1.3 SA controller-helper path:
-                // use the native FE_HLP* GXT string directly in controller mode.
+                // Preserve controller prompts exactly as before.
+                // Keyboard/mouse uses pcbtns.txd when mapped.
+                const bool pcPromptDrawn =
+                    !ShowControllerPrompts() &&
+                    DrawPcHelpPrompt(it, x, y, orientRight);
+
                 auto str = ShowControllerPrompts()
                     ? TheText.Get(it.c_str())
                     : GetHelpPrompt(it);
@@ -2206,7 +2406,12 @@ public:
                     offset = CFont::GetStringWidth(str, true);
                 }
 
+#ifdef GTASA
+                if (!pcPromptDrawn)
+                    CFont::PrintString(x - offset, y, str);
+#else
                 CFont::PrintString(x - offset, y, str);
+#endif
             }
 
 #ifdef GTASA
@@ -3896,6 +4101,28 @@ public:
         const std::string hudDirectory = PLUGIN_PATH("SkyUI\\hud");
         SKY_LOAD(hudSprites, hudDirectory, SkipHigh);
         SKY_LOAD(hudSprites, hudDirectory, SkipIcon);
+
+        // Optional keyboard/mouse button textures from models\pcbtns.txd.
+        // Keep the existing text helpers when the TXD cannot be loaded.
+        pcbtnsAvailable = false;
+        pcbtnsTxdSlot = -1;
+
+        const char* pcbtnsPath = GAME_PATH((char*)"models\\pcbtns.txd");
+        if (plugin::FileExists(pcbtnsPath)) {
+            pcbtnsTxdSlot = CTxdStore::AddTxdSlot("skyui_pcbtns");
+
+            if (pcbtnsTxdSlot != -1 && CTxdStore::LoadTxd(pcbtnsTxdSlot, pcbtnsPath)) {
+                CTxdStore::AddRef(pcbtnsTxdSlot);
+                CTxdStore::PushCurrentTxd();
+                CTxdStore::SetCurrentTxd(pcbtnsTxdSlot);
+
+                for (int32_t i = 0; i < NUM_PC_BTNS; ++i)
+                    pcbtnsSprites[i].SetTexture((char*)pcbtnsSpritesNames[i]);
+
+                CTxdStore::PopCurrentTxd();
+                pcbtnsAvailable = true;
+            }
+        }
 #endif
 
 #undef SKY_LOAD
@@ -3979,8 +4206,11 @@ public:
     static inline void Clear(CMenuManager* _this, bool run = false) {
         controllerSettings.active = menuSettings.active = false; settingsNavigation.Reset();
 #ifdef GTASA
-        // SA frontend starts directly in active standard-input mode.
-        currentInput = INPUT_STANDARD;
+        // Keep the initial frontend active on GAME, while loaded-game pause opens at the tab layer with MAP selected.
+        if (!_this->m_bGameNotLoaded && !saveMenuActive)
+            currentInput = INPUT_TAB;
+        else
+            currentInput = INPUT_STANDARD;
 #else
         if (saveMenuActive)
             currentInput = INPUT_STANDARD;
@@ -3988,7 +4218,10 @@ public:
             currentInput = INPUT_TAB;
 #endif
 
-#if defined(GTAVC) || defined(GTASA) || (defined(GTA3) && defined(LC01))
+#if defined(GTAVC) || (defined(GTA3) && defined(LC01))
+        if (!_this->m_bGameNotLoaded && !saveMenuActive)
+            currentTab = TAB_MAP;
+#elif GTASA
         if (!_this->m_bGameNotLoaded && !saveMenuActive)
             currentTab = TAB_MAP;
 #endif
@@ -4010,7 +4243,7 @@ public:
             SwitchMenuPage(_this, GetTargetPage(), true);
 
 #ifdef GTASA
-        _this->m_bStandardInput = true;
+        _this->m_bStandardInput = (currentInput == INPUT_STANDARD);
         scanGalleryPhotos = true;
 #endif
 
@@ -4129,7 +4362,12 @@ public:
         CFont::SetScale(ScaleX(0.3f), ScaleY(0.7f));
         CFont::SetColor(CRGBA(225, 225, 225, 255));
         PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(100.0f), std::string(ShowControllerPrompts() ? "Square/X: save camera photos " : "F5: save camera photos ") + (_this->m_bPrefsSavePhotos ? "On" : "Off"));
-        if (!galleryStatus.empty()) PrintPlain(ScaleXKeepCentered(40.0f), ScaleY(132.0f), galleryStatus);
+        if (!galleryStatus.empty()) {
+            // Match the F5 helper row and anchor status text to the right.
+            const float galleryStatusRight = SCREEN_WIDTH - ScaleXKeepCentered(40.0f);
+            const float galleryStatusWidth = CFont::GetStringWidth(galleryStatus.c_str(), true);
+            PrintPlain(galleryStatusRight - galleryStatusWidth, ScaleY(100.0f), galleryStatus);
+        }
 
         if (currentInput == INPUT_TAB) {
             CFont::SetProportional(true);
@@ -5243,6 +5481,28 @@ public:
         };
 #else
         auto userInput = [](CMenuManager* _this, uint32_t) SKY_FASTCALL_LAMBDA {
+#ifdef GTASA
+            // Page 44 is ModLoader's root. When opened through SkyUI F1,
+            // Back returns directly to GAME without the native return chain.
+            if (modLoaderReturnPending &&
+                _this->m_nCurrentMenuPage == MENUPAGE_MODLOADER &&
+                (GetEsc() || GetEscGamePadOnly())) {
+                modLoaderReturnPending = false;
+
+                currentTab = TAB_SAV;
+                currentInput = INPUT_STANDARD;
+                _this->m_bStandardInput = true;
+
+                _this->SwitchToNewScreen(MENUPAGE_NEW_GAME);
+                _this->m_nCurrentMenuEntry = 0;
+
+                controllerSettings.active = menuSettings.active = false;
+                settingsNavigation.Reset();
+                ClearInput();
+                return;
+            }
+#endif
+
             if (!KnownMenu(_this)) { _this->UserInput(); return; }
             if (!SettingsActive() && currentInput == INPUT_STANDARD) {
                 if (GetEsc() || GetEscGamePadOnly() || GetCheckHoverForStandardInput(_this)) {
