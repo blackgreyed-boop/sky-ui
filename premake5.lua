@@ -1,4 +1,4 @@
-﻿workspace "sky-ui"
+workspace "sky-ui"
         toolset "v145"
 	configurations { "ReleaseSA", "DebugSA", "ReleaseVC", "DebugVC", "ReleaseIII", "DebugIII" }
 	location "project_files"
@@ -16,8 +16,10 @@ project "sky-ui"
 	disablewarnings { "4244", "4800", "4305", "4073", "4838", "4996", "4221", "4430", "26812", "26495", "6031" }
 
 	files {
-		"source/**.*",
-	}
+        "source/Main.cpp",
+        "source/LoadingScreen.cpp",
+        "source/Settings.cpp",
+}
 	
 	includedirs { 
 		"source/**",

@@ -434,4 +434,7 @@ Audio
 [FEH_DIS]
 Display
 
+[SK_ASPR]
+ASPECT RATIO
+
 )SKYTEXT";

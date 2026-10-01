@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -10,6 +10,13 @@ struct SkyMenuOptions {
     bool showGInputHint = true;
     bool ps2TripSkip = true;
     bool reduceMotion = false;
+
+    // SA map border
+    bool mapRemoveBorder = true;
+    int mapBorderR = 0;
+    int mapBorderG = 0;
+    int mapBorderB = 0;
+    int mapBorderA = 255;
     int promptMode = 0; // 0 automatic, 1 keyboard/mouse, 2 controller (visual only)
     float aspectOverride = 0.0f;
     float animationSpeed = 1.0f;
