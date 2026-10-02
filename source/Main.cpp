@@ -488,13 +488,15 @@ static inline bool modLoaderTabHitboxesValid = false;
         CTRBTN_A,
         CTRBTN_B,
         CTRBTN_Y,
+        CTRBTN_L1,
         NUM_CONTROLLER_BTNS
     };
 
     static inline const char* controllerBtnSpriteNames[NUM_CONTROLLER_BTNS] = {
         "cross",    // A
         "circle",   // B
-        "triangle"  // Y
+        "triangle",// Y
+        "l1"        // L1 / LB
     };
 
     static inline std::array<CSprite2d, NUM_CONTROLLER_BTNS> x360btnsSprites = {};
@@ -1717,7 +1719,6 @@ static inline const plugin::char_t* GetHelpPrompt(const std::string& key) {
             ClearHelpText();
             SetHelpText(0, "FEDS_SE");
             SetHelpText(1, "FEDS_BA");
-            SetHelpText(2, "SK_GAME");
             SetHelpText(4, "FE_HLPG");
             return;
         }
@@ -1732,15 +1733,30 @@ static inline const plugin::char_t* GetHelpPrompt(const std::string& key) {
 
 
 #ifdef GTASA
-        // Game page: F1 opens ModLoader directly.
+        // Game page: F1 on PC or L1/LB on controller opens ModLoader directly.
+        const bool modLoaderShortcut =
+            (CPad::NewKeyState.FKeys[0] && !CPad::OldKeyState.FKeys[0]) ||
+            (
+                HasPadInHands() &&
+                CPad::GetPad(0)->NewState.LeftShoulder1 &&
+                !CPad::GetPad(0)->OldState.LeftShoulder1
+            );
+
         if (modLoader &&
             _this->m_nCurrentMenuPage == MENUPAGE_NEW_GAME &&
-            CPad::NewKeyState.FKeys[0] && !CPad::OldKeyState.FKeys[0]) {
+            modLoaderShortcut) {
 
             modLoaderConfigFallback.loaded = false;
             LoadModLoaderConfigFallback();
 
             modLoaderReturnPending = true;
+            // ModLoader page 44 is always immediately active.
+            // Unlike normal SkyUI menus, it does not wait for first input.
+            
+currentInput = INPUT_STANDARD;
+            
+_this->m_bStandardInput = true;
+
             _this->SwitchToNewScreen(MENUPAGE_MODLOADER);
             return;
         }
@@ -2586,7 +2602,7 @@ static inline const plugin::char_t* GetHelpPrompt(const std::string& key) {
         else if (key == "SK_MODL") {
             sprites = modLoaderSprites;
             spriteCount = 1;
-            label = GetGtaHelperText(key);
+            label = "MOD CONFIG";
         }
         else if (key == "SK_GAME") {
             sprites = modLoaderSprites;
@@ -2790,6 +2806,16 @@ static inline bool DrawControllerHelpPrompt(
         }
 
         /*
+         * MOD CONFIG
+         *
+         * Physical LeftShoulder1 in both GInput layouts.
+         */
+        else if (key == "SK_MODL") {
+            sprite = CTRBTN_L1;
+            label = "MOD CONFIG";
+        }
+
+        /*
          * Everything else remains on GTA's native helper path.
          *
          * This is important: navigation helpers such as FE_HLPG,
@@ -2952,11 +2978,16 @@ static inline void DrawHelpText(CMenuManager* _this) {
                 const bool promptDrawn =
                     controllerMode
                         ? (
-                            GetLiveControllerLayout() == 1 &&
                             (
+                                it == "SK_MODL" ||
+                                (
+                                    GetLiveControllerLayout() == 1 &&
+                                    (
                                 it == "FE_HLPE" ||
                                 it == "FEDS_BA" ||
                                 it == "FEDSBAC"
+                            )
+                                )
                             )
                                 ? DrawControllerHelpPrompt(
                                     it,
@@ -4183,7 +4214,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
         CFont::SetOrientation(ALIGN_LEFT);
         CFont::SetFontStyle(FONT_PRICEDOWN);
         CFont::SetScale(ScaleY(0.5f * skyMenuOptions.tabScale), ScaleY(1.0f * skyMenuOptions.tabScale));
-        CFont::SetScaleForCurrentlanguage(ScaleY(0.5f * skyMenuOptions.tabScale), ScaleY(1.0f * skyMenuOptions.tabScale));
 #endif
 
 #ifdef GTASA
@@ -4270,8 +4300,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
         if (widestRow > rowRoom && widestRow > reservedSpacing) {
             CFont::SetScale(
                 ScaleX(0.64f * skyMenuOptions.tabScale) *
-                ((_this->m_nPrefsLanguage >= 1 &&
-                  _this->m_nPrefsLanguage <= 4) ? 0.8f : 1.0f) *
                 (rowRoom - reservedSpacing) /
                 (widestRow - reservedSpacing),
                 ScaleY(1.0f * skyMenuOptions.tabScale)
@@ -4974,18 +5002,10 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
     static inline void Clear(CMenuManager* _this, bool run = false) {
         controllerSettings.active = menuSettings.active = false; settingsNavigation.Reset();
-#ifdef GTASA
-        // Keep the initial frontend active on GAME, while loaded-game pause opens at the tab layer with MAP selected.
-        if (!_this->m_bGameNotLoaded && !saveMenuActive)
-            currentInput = INPUT_TAB;
-        else
-            currentInput = INPUT_STANDARD;
-#else
         if (saveMenuActive)
             currentInput = INPUT_STANDARD;
         else
             currentInput = INPUT_TAB;
-#endif
 
 #if defined(GTAVC) || (defined(GTA3) && defined(LC01))
         if (!_this->m_bGameNotLoaded && !saveMenuActive)
@@ -5808,12 +5828,8 @@ static inline void DrawHelpText(CMenuManager* _this) {
         CFont::SetDropShadowPosition(2);
         CFont::SetFontStyle(FONT_PRICEDOWN);
         CFont::SetScale(
-            ScaleX(0.5f),
-            ScaleY(1.0f)
-        );
-        CFont::SetScaleForCurrentlanguage(
-            ScaleX(0.5f),
-            ScaleY(1.0f)
+            ScaleY(0.5f * skyMenuOptions.tabScale),
+            ScaleY(1.0f * skyMenuOptions.tabScale)
         );
 
         float spacing = ScaleX(TABS_SPACING);
@@ -5908,7 +5924,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
         ClearHelpText();
 
         // Keep the standard right-side helpers in DrawHelpText.
-        SetHelpText(2, "SK_GAME");
         SetHelpText(4, "FE_HLPG");
 
         DrawHelpText(menu);
@@ -5959,7 +5974,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
                 if (!promptDrawn && controllerMode) {
                     // Controller fallback belongs to GTA/GInput.
-                    // PC SELECT/BACK are fully drawn by DrawPcHelpPrompt.
+                    // PC SELECT/BACK are drawn by DrawPcHelpPrompt.
                     const plugin::char_t* str =
                         GetGtaHelperText(key);
 
