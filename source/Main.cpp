@@ -55,7 +55,6 @@
 #elif GTASA
 #include "CAudioEngine.h"
 #include "d3d9.h"
-#include <filesystem>
 #include "CFileMgr.h"
 #include "CHud.h"
 #include "CMessages.h"
@@ -119,7 +118,6 @@ public:
 #endif
 
     static inline plugin::Timer timer = {};
-
 
 
 #define CONSOLE_MENU_SCALE_X (0.5f)
@@ -482,9 +480,7 @@ static inline bool modLoaderTabHitboxesValid = false;
 
     static inline bool pcbtnsAvailable = false;
     static inline int32_t pcbtnsTxdSlot = -1;
-    // SKYUI_SA_CONTROLLER_HELPER_TEXTURES
     enum eControllerButtonSprite {
-        // Physical GInput button artwork.
         CTRBTN_A,
         CTRBTN_B,
         CTRBTN_Y,
@@ -493,10 +489,10 @@ static inline bool modLoaderTabHitboxesValid = false;
     };
 
     static inline const char* controllerBtnSpriteNames[NUM_CONTROLLER_BTNS] = {
-        "cross",    // A
-        "circle",   // B
-        "triangle",// Y
-        "l1"        // L1 / LB
+        "cross",
+        "circle",
+        "triangle",
+        "l1"
     };
 
     static inline std::array<CSprite2d, NUM_CONTROLLER_BTNS> x360btnsSprites = {};
@@ -839,12 +835,6 @@ static inline bool modLoaderTabHitboxesValid = false;
 
         const float me = 16.0f;
 
-        //CVector2D points[] = { 
-        //    // Left Top         // Right Top
-        //    { 68.0f, 74.0f }, { 566.0f, 22.0f },
-        //    // Left Bottom      // Right Bottom
-        //    { 50.0f, 380.0f }, { 596.0f, 366.0f }          
-        //};        
 
         float x = DEFAULT_SCREEN_WIDTH / 2;
         float y = DEFAULT_SCREEN_HEIGHT / 2;
@@ -989,8 +979,6 @@ static inline bool modLoaderTabHitboxesValid = false;
             i = currentTab;
 
 #ifdef GTA3
-        //if (i == TAB_STA || i == TAB_BRI)
-        //    return;
 #elif GTAVC
         if (i == TAB_BRI)
             return;
@@ -1009,7 +997,6 @@ static inline bool modLoaderTabHitboxesValid = false;
         _this->m_nHoverOption = 0;
 
         currentInput = INPUT_STANDARD;
-        //ClearInput();
 
         if (i == TAB_AUD) {
 #if defined(GTA3) || defined(GTAVC)
@@ -1258,7 +1245,7 @@ static inline bool modLoaderTabHitboxesValid = false;
         float x2 = SCREEN_WIDTH;
         float y1 = 0.0f;
         float y2 = ScaleY(DEFAULT_SCREEN_HEIGHT - 92.0f);
-       
+
         if ((_this->m_nCurrentMenuPage == MENUPAGE_MAP || _this->m_nCurrentMenuPage == MENUPAGE_CHOOSE_SAVE_SLOT) && currentInput != INPUT_TAB)
             y2 = ScaleY(DEFAULT_SCREEN_HEIGHT);
 #endif
@@ -1297,7 +1284,7 @@ static inline bool modLoaderTabHitboxesValid = false;
             }
         }
 
-        if (_this->m_nCurrentMenuPage != GetTargetPage() 
+        if (_this->m_nCurrentMenuPage != GetTargetPage()
 #ifdef GTAVC
             || IsCurrentScreenCustom(_this)
 #endif
@@ -1699,8 +1686,6 @@ static inline const plugin::char_t* GetHelpPrompt(const std::string& key) {
         if (key == "SK_MODL")
             return textLoader.Get("SK_MODL");
 
-        if (key == "SK_GAME")
-            return textLoader.Get("SK_GAME");
 
         if (key == "SK_ASPR")
             return textLoader.Get("SK_ASPR");
@@ -1750,12 +1735,8 @@ static inline const plugin::char_t* GetHelpPrompt(const std::string& key) {
             LoadModLoaderConfigFallback();
 
             modLoaderReturnPending = true;
-            // ModLoader page 44 is always immediately active.
-            // Unlike normal SkyUI menus, it does not wait for first input.
-            
-currentInput = INPUT_STANDARD;
-            
-_this->m_bStandardInput = true;
+            currentInput = INPUT_STANDARD;
+            _this->m_bStandardInput = true;
 
             _this->SwitchToNewScreen(MENUPAGE_MODLOADER);
             return;
@@ -1776,10 +1757,7 @@ _this->m_bStandardInput = true;
         default:
             SetHelpText(0, "FEDS_SE");
 
-            if (currentInput == INPUT_TAB && _this->m_bGameNotLoaded) {
-
-            }
-            else {
+            if (!(currentInput == INPUT_TAB && _this->m_bGameNotLoaded)) {
                 SetHelpText(1, "FEDS_BA");
 
 #ifndef LC01
@@ -1965,7 +1943,7 @@ _this->m_bStandardInput = true;
             break;
         }
 #endif
-    
+
         if (timeToWaitBeforeStateChange != -1 && timeToWaitBeforeStateChange < CTimer::m_snTimeInMillisecondsPauseMode) {
             switch (menuState) {
             case STATE_NONE:
@@ -2315,7 +2293,7 @@ _this->m_bStandardInput = true;
         pos.x1 += ScaleX(GetMenuOffsetX());
         pos.x2 += ScaleX(GetMenuOffsetX());
         pos.x3 += ScaleX(GetMenuOffsetX());
-        pos.x4 += ScaleX(GetMenuOffsetX()); 
+        pos.x4 += ScaleX(GetMenuOffsetX());
     }
 
     static inline void Scale(CMenuPoly& pos, float value) {
@@ -2412,7 +2390,7 @@ _this->m_bStandardInput = true;
 
             const bool selected = (aScreens[_this->m_nCurrentMenuPage].m_aEntries[_this->m_nCurrentMenuEntry].m_nAction == type) && currentInput == INPUT_STANDARD;
             if (current < progress)
-                CSprite2d::DrawRect(CRect(_x, _y - _h, _x + _w, _y), 
+                CSprite2d::DrawRect(CRect(_x, _y - _h, _x + _w, _y),
 #if defined(GTA3) && defined(LC01)
                    selected ? CRGBA(HUD_COLOUR_WHITE, GetAlpha()) : CRGBA(HUD_COLOUR_LCS_MENU, GetAlpha())
 #else
@@ -2447,7 +2425,7 @@ _this->m_bStandardInput = true;
 #endif
         }
     }
-    
+
     static inline void SetHelpText(uint8_t id, std::string const& str) {
         if (id < helpTexts.size()) helpTexts[id] = str;
     }
@@ -2478,6 +2456,8 @@ _this->m_bStandardInput = true;
 #endif
 
     static inline void DrawHeader(CMenuManager* _this) {
+        if (SettingsActive())
+            return;
 #ifdef GTA3
 #ifdef LC01
         CFont::SetPropOn();
@@ -2501,7 +2481,7 @@ _this->m_bStandardInput = true;
         CFont::SetDropColor(CRGBA(0, 0, 0, GetAlpha()));
         CFont::SetColor(CRGBA(0, 0, 0, GetAlpha()));
         CFont::SetFontStyle(2);
-        
+
         if (_this->m_nCurrentMenuPage == MENUPAGE_KEYBOARD_CONTROLS) {
             CFont::SetScale(ScaleX(0.8f), ScaleY(1.2f));
             CFont::PrintString(SCREEN_WIDTH - ScaleX(44.0f + GetMenuOffsetX()), ScaleY(DEFAULT_SCREEN_HEIGHT - 74.0f), UpperCase(textLoader.Get(tabs.at(currentTab).str)));
@@ -2604,11 +2584,7 @@ _this->m_bStandardInput = true;
             spriteCount = 1;
             label = "MOD CONFIG";
         }
-        else if (key == "SK_GAME") {
-            sprites = modLoaderSprites;
-            spriteCount = 1;
-            label = GetGtaHelperText(key);
-        }
+
                 else if (
             key == "FE_HLPG" ||
             key == "FE_HLPI" ||
@@ -2659,7 +2635,7 @@ _this->m_bStandardInput = true;
             ScaleX(0.32f * skyMenuOptions.helpScale),
             ScaleY(0.65f * skyMenuOptions.helpScale));
 
-        
+
         CFont::SetColor(CRGBA(150, 150, 150, GetAlpha(255)));
 const float labelWidth = CFont::GetStringWidth(label, true);
 
@@ -2697,17 +2673,7 @@ const float labelWidth = CFont::GetStringWidth(label, true);
     }
 #endif
 
-        static inline int32_t GetLiveControllerLayout() {
-        /*
-         * GInput ControlsSet is one-based:
-         *
-         *   1 = Classic / Layout 1
-         *   2 = IV / Layout 2
-         *
-         * Controller artwork selection belongs here.
-         * It must NOT be inferred from FE_HLPE / FE_HLPW /
-         * FEDS_BA / FEDSBAC helper strings.
-         */
+    static inline int32_t GetLiveControllerLayout() {
         const int32_t controlsSet =
             controllerSettings.path.empty()
                 ? (prefsConfigSetup + 1)
@@ -2715,7 +2681,29 @@ const float labelWidth = CFont::GetStringWidth(label, true);
 
         return controlsSet == 2 ? 2 : 1;
     }
-static inline bool DrawControllerHelpPrompt(
+
+    static inline bool IsLayout1BackHelper(
+        const std::string& key
+    ) {
+        return
+            key == "FE_HLPE" ||
+            key == "FEDS_BA" ||
+            key == "FEDSBAC";
+    }
+
+    static inline bool ShouldDrawControllerHelpPrompt(
+        const std::string& key,
+        bool allowModConfig
+    ) {
+        if (allowModConfig && key == "SK_MODL")
+            return true;
+
+        return
+            GetLiveControllerLayout() == 1 &&
+            IsLayout1BackHelper(key);
+    }
+
+    static inline bool DrawControllerHelpPrompt(
         const std::string& key,
         float anchorX,
         float y,
@@ -2896,7 +2884,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
         CFont::SetRightJustifyWrap(0.0f);
         CFont::SetDropShadowPosition(0);
 
-#if defined(GTA3) && !defined(LC01) 
+#if defined(GTA3) && !defined(LC01)
         CFont::SetScale(ScaleX(0.38f * skyMenuOptions.helpScale), ScaleY(0.64f * skyMenuOptions.helpScale));
         CFont::SetDropColor(CRGBA(0, 0, 0, GetAlpha()));
 
@@ -2905,7 +2893,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
         float startx = ScaleXKeepCentered(50.0f + GetMenuOffsetX());
         float starty = ScaleY(DEFAULT_SCREEN_HEIGHT - 94.0f);
-#elif defined(GTA3) && defined(LC01) 
+#elif defined(GTA3) && defined(LC01)
         CFont::SetDropShadowPosition(0);
         CFont::SetScale(ScaleX(0.4f * skyMenuOptions.helpScale), ScaleY(0.9f * skyMenuOptions.helpScale));
 
@@ -2966,29 +2954,13 @@ static inline void DrawHelpText(CMenuManager* _this) {
 #endif
             if (!it.empty()) {
                 #ifdef GTASA
-                // Preserve controller prompts exactly as before.
-                // Keyboard/mouse uses pcbtns.txd when mapped.
                 const bool controllerMode =
                     ShowControllerPrompts();
 
-                /*
-                 * Controller helpers are owned by GTA/GInput.
-                 * SkyUI draws only keyboard/mouse helper sprites.
-                 */
                 const bool promptDrawn =
                     controllerMode
                         ? (
-                            (
-                                it == "SK_MODL" ||
-                                (
-                                    GetLiveControllerLayout() == 1 &&
-                                    (
-                                it == "FE_HLPE" ||
-                                it == "FEDS_BA" ||
-                                it == "FEDSBAC"
-                            )
-                                )
-                            )
+                            ShouldDrawControllerHelpPrompt(it, true)
                                 ? DrawControllerHelpPrompt(
                                     it,
                                     x,
@@ -3068,12 +3040,12 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
             y += ScaleY(spacing);
 
-#if defined(GTA3) && !defined(LC01) 
+#if defined(GTA3) && !defined(LC01)
             if (i == 2) {
                 x += ScaleX(198.0f);
                 y = starty;
             }
-#elif defined(GTA3) && defined(LC01) 
+#elif defined(GTA3) && defined(LC01)
             if (i == 1) {
                 orientRight = false;
                 x = (SCREEN_WIDTH / 2) - ScaleX(40.0f);
@@ -3130,10 +3102,10 @@ static inline void DrawHelpText(CMenuManager* _this) {
             alpha = 1.0f;
         }
 
-        if (alpha < 0.0f) 
+        if (alpha < 0.0f)
             alpha = 0.0f;
 
-        if (alpha > 1.0f) 
+        if (alpha > 1.0f)
             alpha = 1.0f;
 
         return alpha;
@@ -3326,7 +3298,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-80.0f), textLoader.Get("FEC_LL")); // l1
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-54.0f), textLoader.Get("FEC_TSK")); // dpad right
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-38.0f), textLoader.Get("FEC_RSC")); // up
-                    CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-22.0f), textLoader.Get("FEC_NA"));  // left 
+                    CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-22.0f), textLoader.Get("FEC_NA"));  // left
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-4.0f), textLoader.Get("FEC_RSP"));  // down
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(10.0f), textLoader.Get("FEC_VES"));  // stick
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(22.0f), textLoader.Get("FEC_HOV"));  // l3
@@ -3349,7 +3321,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-80.0f), textLoader.Get("FEC_USE"));  // l1
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-54.0f), textLoader.Get("FEC_CWR"));  // dpad right
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-38.0f), textLoader.Get("FEC_NA"));  // up
-                    CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-22.0f), textLoader.Get("FEC_CWL"));  // left 
+                    CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-22.0f), textLoader.Get("FEC_CWL"));  // left
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(-4.0f), textLoader.Get("FEC_NA"));   // down
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(10.0f), textLoader.Get("FEC_MOV"));   // stick
                     CFont::PrintString(x + ScaleX(-138.0f), y + ScaleY(22.0f), textLoader.Get("FEC_CR3"));   // l3
@@ -3430,7 +3402,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
                     CFont::SetOrientation(ALIGN_RIGHT);
                     CFont::PrintString(x + ScaleX(-68.0f), y + ScaleY(-108.0f), textLoader.Get("FEC_LOL"));
 
-                    CFont::PrintString(x + ScaleX(-122.0f), y + ScaleY(-60.0f), textLoader.Get("FEC_HRN")); 
+                    CFont::PrintString(x + ScaleX(-122.0f), y + ScaleY(-60.0f), textLoader.Get("FEC_HRN"));
                     CFont::PrintString(x + ScaleX(-122.0f), y + ScaleY(-24.0f), textLoader.Get("FEC_CAM"));
                     CFont::PrintString(x + ScaleX(-122.0f), y + ScaleY(10.0f), textLoader.Get("FEC_VES"));
 
@@ -3682,7 +3654,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
         if (_this->m_nCurrentMenuPage == MENUPAGE_MAP)
             _this->PrintMap();
-    
+
 #endif
 
 #if defined(GTA3)
@@ -3862,7 +3834,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
             DrawTrapezoid();
 #endif
 
-        // Sliders 
+        // Sliders
         for (int i = 0; i < NUM_ENTRIES; i++) {
             auto action = aScreens[_this->m_nCurrentMenuPage].m_aEntries[i].m_nAction;
 
@@ -3945,7 +3917,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
         }
 #elif  defined(GTAVC)
         if (tab == TAB_PS)
-            return false; 
+            return false;
 #endif
 
         if (_this->m_bGameNotLoaded && (tab == TAB_STA || tab == TAB_BRI
@@ -4004,7 +3976,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 //        }
 //#endif
 
-#ifdef GTAVC 
+#ifdef GTAVC
         if (i == currentTab && currentInput == INPUT_TAB)
             UpdateItemPoly(_this, x + strWidth / 2, y + ScaleY(10.0f), ScaleX(4.0f) + strWidth / 2, ScaleY(10.0f));
 #endif
@@ -4038,7 +4010,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
 #if defined(GTA3) && !defined(LC01)
         if (currentInput != INPUT_STANDARD || i == currentTab)
-#endif 
+#endif
         {
 #if defined(GTA3) && !defined(LC01)
             rect.left = x + ScaleX(-4.0f);
@@ -4124,7 +4096,15 @@ static inline void DrawHelpText(CMenuManager* _this) {
             updateBackPoly = true;
         }
 #endif
-        if (SettingsActive()) { DrawControllerSettings(_this); return; }
+        if (SettingsActive()) {
+#ifdef GTASA
+            // Native SA frontend text has already been queued.
+            // Flush it before SkyUI queues the settings overlay text.
+            CFont::DrawFonts();
+#endif
+            DrawControllerSettings(_this);
+            return;
+        }
 
         if (_this->m_nCurrentMenuPage == MENUPAGE_KEYBOARD_CONTROLS)
             return;
@@ -4379,7 +4359,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
             modLoader = true;
         }
 #endif
-    
+
         if (!ginput && GInput_Load(&gInputPad)) {
             ginput = true;
             SkyGInputEvent(gInputPad, GINPUT_EVENT_REGISTER_SETTINGS_RELOAD_CALLBACK, reinterpret_cast<void*>(&SetGInputStuff));
@@ -4393,17 +4373,16 @@ static inline void DrawHelpText(CMenuManager* _this) {
         freopen("conout$", "w", stdout);
         freopen("conout$", "w", stderr);
         std::setvbuf(stdout, NULL, _IONBF, 0);
-#endif   
+#endif
     }
 
     static inline std::vector<SafetyHookMid> retainedMidHooks;
     static bool InstallPreservingHook(uintptr_t address, std::initializer_list<uint8_t> expected, safetyhook::MidHookFn callback) {
         if (memcmp(reinterpret_cast<const void*>(address), expected.begin(), expected.size()) != 0) {
-            OutputDebugStringA("SkyUI: skipped a modified instruction hook\n");
             return false;
         }
         auto hook = safetyhook::create_mid(reinterpret_cast<void*>(address), callback);
-        if (!hook) { OutputDebugStringA("SkyUI: could not install instruction hook\n"); return false; }
+        if (!hook) return false;
         retainedMidHooks.emplace_back(std::move(hook));
         return true;
     }
@@ -4551,19 +4530,19 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[1].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[1].m_EntryName[0] = '\0';
-        
+
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[2].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[2].m_EntryName[0] = '\0';
-        
+
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[3].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[3].m_EntryName[0] = '\0';
-        
+
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[4].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[4].m_EntryName[0] = '\0';
-        
+
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[5].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_LANGUAGE_SETTINGS].m_aEntries[5].m_EntryName[0] = '\0';
-        
+
         aScreens[MENUPAGE_SKIN_SELECT].m_aEntries[0].m_nAction = MENUACTION_NOTHING;
         aScreens[MENUPAGE_SKIN_SELECT].m_aEntries[0].m_EntryName[0] = '\0';
 #endif
@@ -4781,7 +4760,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
         aScreens[MENUPAGE_CONTROLLER_PS2].m_aEntries[2].m_nY = 0;
         aScreens[MENUPAGE_CONTROLLER_PS2].m_aEntries[2].m_nAlign = 1;
 
-#ifdef GTAVC        
+#ifdef GTAVC
         aScreens[MENUPAGE_CONTROLLER_PS2].m_aEntries[0].m_nX += 42;
 #else
         // Explicit compact rows end before the diagram labels at y=165.
@@ -4813,7 +4792,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
         frontendSprites.Clear();
         const std::string frontendDirectory = PLUGIN_PATH("SkyUI\\frontend");
-        std::ofstream(PLUGIN_PATH("SkyUI-assets.log"), std::ios::trunc) << "SkyUI v13 private assets\n";
 #define SKY_LOAD(store, directory, name) store.Load(directory, #name, sky_png_##name, sizeof(sky_png_##name))
 #ifdef GTASA
         SKY_LOAD(frontendSprites, frontendDirectory, CONTROLLER_PS2);
@@ -5582,7 +5560,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
                 if (_this->m_bShowMouse &&
                     _this->CheckHover(ScaleXKeepCentered(x + GetMenuOffsetX()), ScaleXKeepCentered(x + 256.0f + GetMenuOffsetX()), ScaleY(y + 22.0f + nexty), ScaleY(y + 22.0f + nexty + 12.0f))) {
-                    
+
                     if (currPlayerSkin != i)
                         currPlayerSkin = i;
 
@@ -5676,7 +5654,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
         // Render player
         static uint32_t prevTime = 0;
 
-        // Input   
+        // Input
         if (currentInput == INPUT_STANDARD
             && ((CPad::GetPad(0)->NewMouseControllerState.lmb
             && _this->m_nMousePosX >= (SCREEN_WIDTH / 2) + ScaleX(48.0f) && _this->m_nMousePosX <= (SCREEN_WIDTH / 2) + ScaleX(64.0f + 128.0f))
@@ -5734,30 +5712,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
 
 #ifdef GTASA
     static inline bool saFrontendInstalled = false;
-    static inline unsigned saLoggedFrames = 0;
-
-    static void LogSaFrontend(CMenuManager* menu) {
-        static int lastPage = -1;
-        static unsigned pageFrames = 0;
-        if (lastPage != menu->m_nCurrentMenuPage) {
-            lastPage = menu->m_nCurrentMenuPage;
-            pageFrames = 0;
-        }
-        if (saLoggedFrames >= 128 || pageFrames++ >= 2) return;
-        std::ofstream log(PLUGIN_PATH("SkyUI-render.log"), std::ios::app);
-        log << "draw=" << ++saLoggedFrames << " page=" << int(menu->m_nCurrentMenuPage)
-            << " initialized=" << initialised << " tabs=" << tabs.size()
-            << " controller=" << frontendSprites.GetTex("CONTROLLER_PS2")
-            << " input=" << int(currentInput) << " tab=" << int(currentTab)
-            << " wait=" << timeToWaitBeforeStateChange << " save=" << saveMenuActive
-            << " screen=" << SCREEN_WIDTH << 'x' << SCREEN_HEIGHT
-            << " aspect=" << GetAspectRatio()
-            << " font0=" << CFont::Sprite[0].m_pTexture
-            << " font1=" << CFont::Sprite[1].m_pTexture
-            << " scale=" << CFont::m_Scale->x << ',' << CFont::m_Scale->y
-            << " alpha=" << int(CFont::m_Color->a) << '\n';
-    }
-
     struct SaCursorDraw { CSprite2d* sprite; CRect rect; CRGBA color; };
     static inline std::vector<SaCursorDraw> saCursorDraws;
     static inline bool deferSaCursor = false;
@@ -5916,26 +5870,11 @@ static inline void DrawHelpText(CMenuManager* _this) {
         }
         modLoaderTabHitboxesValid = true;
 
-        // Page 44 bypasses SkyUI's normal KnownMenu() rendering path.
-        // Draw the helper prompts here using the standard SkyUI helper renderer.
-        // SKYUI_SA_MODLOADER_REFRESH_HELPERS
-        //
-        // Page 44 bypasses the normal KnownMenu helper lifecycle.
+        // ModLoader page 44 bypasses the normal KnownMenu helper lifecycle.
         ClearHelpText();
-
-        // Keep the standard right-side helpers in DrawHelpText.
         SetHelpText(4, "FE_HLPG");
-
         DrawHelpText(menu);
 
-        // SKYUI_SA_MODLOADER_TEXTURED_LEFT_HELPERS
-        //
-        // Use the same dual prompt system as the rest of SkyUI:
-        //
-        //   keyboard/mouse -> pcbtns.txd textured prompts
-        //   controller     -> controller prompt strings
-        //
-        // Keep these at the confirmed ModLoader bottom-left position.
         const float modLoaderHelpX = ScaleX(32.0f);
         const float modLoaderHelpY = ScaleY(410.0f);
 
@@ -5945,20 +5884,10 @@ static inline void DrawHelpText(CMenuManager* _this) {
                 const bool controllerMode =
                     ShowControllerPrompts();
 
-
-                /*
-                 * Controller helpers are owned by GTA/GInput.
-                 * SkyUI draws only keyboard/mouse helper sprites.
-                 */
                 const bool promptDrawn =
                     controllerMode
                         ? (
-                            GetLiveControllerLayout() == 1 &&
-                            (
-                                key == "FE_HLPE" ||
-                                key == "FEDS_BA" ||
-                                key == "FEDSBAC"
-                            )
+                            ShouldDrawControllerHelpPrompt(key, false)
                                 ? DrawControllerHelpPrompt(
                                     key,
                                     modLoaderHelpX,
@@ -5973,8 +5902,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
                             false);
 
                 if (!promptDrawn && controllerMode) {
-                    // Controller fallback belongs to GTA/GInput.
-                    // PC SELECT/BACK are drawn by DrawPcHelpPrompt.
                     const plugin::char_t* str =
                         GetGtaHelperText(key);
 
@@ -5995,8 +5922,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
     static void __fastcall DrawSaFrontend(CMenuManager* menu, void*) {
         saCursorDraws.clear();
         deferSaCursor = true;
-        // SKYUI_SA_MODLOADER_REMOVE_NATIVE_BACK
-        //
+
         // Remove ModLoader's native seventh BACK entry. SkyUI handles
         // Back/Esc separately, so ML_FTB must not participate in native
         // keyboard/controller navigation, mouse hover, or mouse clicks.
@@ -6038,29 +5964,17 @@ static inline void DrawHelpText(CMenuManager* _this) {
         CFont::DrawFonts();
         for (const auto& cursor : saCursorDraws) cursor.sprite->Draw(cursor.rect, cursor.color);
         saCursorDraws.clear();
-        LogSaFrontend(menu);
     }
 
     static void InstallSaFrontend() {
         // IDB: DrawFrontEnd tail-jumps to DrawBackground, E9 27 F4 FF FF.
         const uint8_t expected[] = {0xE9, 0x27, 0xF4, 0xFF, 0xFF};
-        std::ofstream log(PLUGIN_PATH("SkyUI-render.log"), std::ios::trunc);
-        log << "SkyUI v13 SA frontend; " << plugin::GetGameVersionName() << '\n';
-        HMODULE module = nullptr;
-        char modulePath[MAX_PATH] = {};
-        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            reinterpret_cast<LPCSTR>(&DrawSaFrontend), &module)) {
-            GetModuleFileNameA(module, modulePath, MAX_PATH);
-            log << "module=" << modulePath << '\n';
-        }
         if (memcmp(reinterpret_cast<const void*>(0x57C324), expected, sizeof(expected)) != 0) {
-            log << "frontend hook skipped: 0x57C324 already modified; native labels retained\n";
             return;
         }
         plugin::patch::RedirectJump(0x57C324, DrawSaFrontend);
         saFrontendInstalled = true;
         InstallSaCursor();
-        log << "frontend hook installed at 0x57C324 -> after native DrawBackground\n";
     }
 #endif
 
@@ -6160,7 +6074,7 @@ static inline void DrawHelpText(CMenuManager* _this) {
         };
         plugin::patch::RedirectCall(0x47C74C, LAMBDA(void, __cdecl, drawRightString, float, float, wchar_t*));
         plugin::patch::SetUChar(0x47DA11 + 6, 255);
-    
+
             // Stats
             if (0) {
                 auto drawCrimRa = [](float, float, wchar_t* str) {
@@ -6558,7 +6472,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
 #endif
 
 
-
 #if defined(GTA3) || defined(GTAVC)
         onDrawStandardMenu.before += [](CMenuManager* _this) {
             DrawBack(_this);
@@ -6576,7 +6489,6 @@ static inline void DrawHelpText(CMenuManager* _this) {
 #endif
 
 #ifdef GTASA
-        // SKYUI_SA_MAP_BORDER_CONFIG
         //
         // remove_border=1:
         //   Do not constrain the native map to SkyUI's square viewport.
@@ -6865,7 +6777,7 @@ if (!KnownMenu(_this)) { _this->UserInput(); return; }
         plugin::patch::SetUChar(0x47C77D + 1, colSelected[1]);
         plugin::patch::SetUChar(0x47C77B + 1, colSelected[2]);
 
-        // item col 
+        // item col
         static uint8_t col[] = { HUD_COLOUR_LCS_MENU, 255 };
         plugin::patch::SetUChar(0x47C7B0 + 1, col[0]);
         plugin::patch::SetUChar(0x47C7AB + 1, col[1]);
@@ -7073,7 +6985,7 @@ if (!KnownMenu(_this)) { _this->UserInput(); return; }
         //    RwCameraShowRaster(camera, pDev, CMenuManager::m_bPrefsFrameLimiter || CLoadingScreen::m_bActive);
         //};
         //plugin::patch::RedirectCall(0x580CCC, LAMBDA(void, __cdecl, cameraShowRasterHook, RwCamera*, void*, RwUInt32));
-        
+
         plugin::Events::initRwEvent += []() {
             CLoadingScreen::sampleManager = std::make_unique<plugin::BassSampleManager>();
             CLoadingScreen::sampleManager->settings.masterVolume = [] { return SampleManager.m_nEffectsVolume; };
@@ -7188,7 +7100,7 @@ if (!KnownMenu(_this)) { _this->UserInput(); return; }
         plugin::patch::Set(0x48D796 + 1, "splash1");
         plugin::patch::Set(0x48E7E0 + 1, "splash1");
 
-        // menu background 
+        // menu background
         auto changeBackgroundHack = []() {
             CMenuManager* _this = &FrontEndMenuManager;
             uint8_t prev = MENUSPRITE_FINDGAME;
@@ -7217,9 +7129,7 @@ if (!KnownMenu(_this)) { _this->UserInput(); return; }
 
  }
 
-    ~SkyUI() {
 
-    }
 } skyUI;
 
 // Stable C entry points for the cross build; exports.def preserves the MSVC API names.
@@ -7236,21 +7146,3 @@ extern "C" void sky_AddEntryToMenuScreen(uint32_t s, uint32_t e, uint32_t a, con
 extern "C" void sky_SaveOrLoadSettingsCB(void (*cb)(bool)) { return SkyUI::SaveOrLoadSettingsCB(cb); }
 extern "C" void sky_SaveSettings() { return SkyUI::SaveSettings(); }
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
